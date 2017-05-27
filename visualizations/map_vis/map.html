@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .pedestrian, .pedestrian svg {
+        position: absolute;
+      }
+
+      .pedestrian svg {
+        width: 60px;
+        height: 20px;
+        padding-right: 100px;
+        font: 8px sans-serif;
+      }
+
+      .pedestrian circle {
+        fill: #64DD17;
+        stroke: #64DD17;
+      }
+
+      .citi, .citi svg {
+        position: absolute;
+      }
+
+      .citi svg {
+        width: 60px;
+        height: 20px;
+        padding-right: 100px;
+        font: 8px sans-serif;
+      }
+
+      .citi circle {
+        fill: #066FD5;
+        stroke: #066FD5;
+      }
+
+      .subway, .subway svg {
+        position: absolute;
+      }
+
+      .subway svg {
+        width: 60px;
+        height: 20px;
+        padding-right: 100px;
+        font: 8px sans-serif;
+      }
+
+      .subway circle {
+        fill: #FF5722;
+        stroke: #FF5722;
+      }
+        
+
+    </style>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+
+  </head>
+  <body>
+    
+
+    <div id="map"></div>
+    <script>
+    var myStyle = [
+           {
+             featureType: "administrative",
+             elementType: "labels",
+             stylers: [
+               { visibility: "off" }
+             ]
+           },{
+             featureType: "poi",
+             elementType: "labels",
+             stylers: [
+               { visibility: "off" }
+             ]
+           },{
+             featureType: "water",
+             elementType: "labels",
+             stylers: [
+               { visibility: "off" }
+             ]
+           },{
+             featureType: "road",
+             elementType: "labels",
+             stylers: [
+               { visibility: "off" }
+             ]
+           },
+           {
+              featureType: "all",
+              stylers: [
+                { saturation: -90 },
+                // { lightness: 50 }
+              ]
+            }
+         ];
+
+      var map;
+      function initMap() {
+        // map = new google.maps.Map(document.getElementById('map'), {
+        //   center: {lat: -34.397, lng: 150.644},
+        //   zoom: 8
+        // });
+        map = new google.maps.Map(d3.select("#map").node(), {
+          mapTypeControlOptions: {
+             mapTypeIds: ['mystyle', google.maps.MapTypeId.ROADMAP, google.maps.MapTypeId.TERRAIN]
+           },
+          zoom: 13,
+          center: new google.maps.LatLng(40.727, -73.95),
+          mapTypeId: 'mystyle'
+          // mapTypeId: google.maps.MapTypeId.SATELLITE
+        });
+
+        map.mapTypes.set('mystyle', new google.maps.StyledMapType(myStyle, { name: 'My Style' }));
+
+
+
+        
+
+
+
+
+        // Load the station data. When the data comes back, create an overlay.
+        d3.json("ped_coord.json", function(error, data) {
+          if (error) throw error;
+
+          var overlay = new google.maps.OverlayView();
+
+          // Add the container when the overlay is added to the map.
+          overlay.onAdd = function() {
+            var layer = d3.select(this.getPanes().overlayLayer).append("div")
+                .attr("class", "pedestrian");
+
+            // Draw each marker as a separate SVG element.
+            // We could use a single SVG, but what size would it have?
+            overlay.draw = function() {
+              var projection = this.getProjection(),
+                  padding = 10;
+
+              var marker = layer.selectAll("svg")
+                  .data(d3.entries(data))
+                  .each(transform) // update existing markers
+                .enter().append("svg")
+                  .each(transform)
+                  .attr("class", "marker");
+
+              // Add a circle.
+              // Determine it's radius depending on the usage of this point 
+              marker.append("circle")
+                  .attr("r", rad)
+                  .attr("cx", padding)
+                  .attr("cy", padding);
+
+              function rad(d){
+                console.log(d.value[2]);
+                var position = d.value[2]
+
+                var minp = 1000;
+                var maxp = 60000;
+
+                // The result should be between 100 an 10000000
+                var minv = Math.log(2);
+                var maxv = Math.log(20);
+
+                // calculate adjustment factor
+                var scale = (maxv-minv) / (maxp-minp);
+
+                return Math.exp(minv + scale*(position-minp));
+
+
+              }
+
+
+              function transform(d) {
+                d = new google.maps.LatLng(d.value[1], d.value[0]);
+                d = projection.fromLatLngToDivPixel(d);
+                return d3.select(this)
+                    .style("left", (d.x - padding) + "px")
+                    .style("top", (d.y - padding) + "px");
+              }
+
+            };
+          };
+
+          // Bind our overlay to the map…
+          overlay.setMap(map);
+        });
+        d3.json("citi_coord.json", function(error, data) {
+          if (error) throw error;
+
+          var overlay = new google.maps.OverlayView();
+
+          // Add the container when the overlay is added to the map.
+          overlay.onAdd = function() {
+            var layer = d3.select(this.getPanes().overlayLayer).append("div")
+                .attr("class", "citi");
+
+            // Draw each marker as a separate SVG element.
+            // We could use a single SVG, but what size would it have?
+            overlay.draw = function() {
+              var projection = this.getProjection(),
+                  padding = 10;
+
+              var marker = layer.selectAll("svg")
+                  .data(d3.entries(data))
+                  .each(transform_c) // update existing markers
+                .enter().append("svg")
+                  .each(transform_c)
+                  .attr("class", "marker");
+
+              // Add a circle.
+              // Determine it's radius depending on the usage of this point 
+              marker.append("circle")
+                  .attr("r", rad)
+                  .attr("cx", padding)
+                  .attr("cy", padding);
+
+              function rad(d){
+                console.log(d.value[2]);
+                var position = d.value[2]
+                var minp = 20;
+                var maxp = 200000;
+
+                // The result should be between 100 an 10000000
+                var minv = Math.log(2);
+                var maxv = Math.log(20);
+
+                // calculate adjustment factor
+                var scale = (maxv-minv) / (maxp-minp);
+
+                return Math.exp(minv + scale*(position-minp));
+
+
+              }
+
+ 
+              function transform_c(d) {
+                d = new google.maps.LatLng(d.value[1], d.value[0]);
+                d = projection.fromLatLngToDivPixel(d);
+                return d3.select(this)
+                    .style("left", (d.x - padding) + "px")
+                    .style("top", (d.y - padding) + "px");
+              }
+            };
+          };
+          overlay.setMap(map);
+        });
+
+        d3.json("subway_coord.json", function(error, data) {
+          if (error) throw error;
+
+          var overlay = new google.maps.OverlayView();
+
+          // Add the container when the overlay is added to the map.
+          overlay.onAdd = function() {
+            var layer = d3.select(this.getPanes().overlayLayer).append("div")
+                .attr("class", "subway");
+
+            // Draw each marker as a separate SVG element.
+            // We could use a single SVG, but what size would it have?
+            overlay.draw = function() {
+              var projection = this.getProjection(),
+                  padding = 10;
+
+              var marker = layer.selectAll("svg")
+                  .data(d3.entries(data))
+                  .each(transform_s) // update existing markers
+                .enter().append("svg")
+                  .each(transform_s)
+                  .attr("class", "marker");
+
+              // Add a circle.
+              // Determine it's radius depending on the usage of this point 
+              marker.append("circle")
+                  .attr("r", rad)
+                  .attr("cx", padding)
+                  .attr("cy", padding);
+
+              function rad(d){
+                console.log(d.value[2]);
+                var position = d.value[2]
+
+                var minp = 20;
+                var maxp = 4000000;
+
+                // The result should be between 100 an 10000000
+                var minv = Math.log(2);
+                var maxv = Math.log(20);
+
+                // calculate adjustment factor
+                var scale = (maxv-minv) / (maxp-minp);
+
+                return Math.exp(minv + scale*(position-minp));
+
+
+              }
+
+
+              function transform_s(d) {
+                d = new google.maps.LatLng(d.value[1], d.value[0]);
+                d = projection.fromLatLngToDivPixel(d);
+                
+                return d3.select(this)
+                    .style("left", (d.x - padding) + "px")
+                    .style("top", (d.y - padding) + "px")
+                    
+              }
+            };
+          };
+          overlay.setMap(map);
+        });
+
+
+
+      }
+    </script>
+
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKf-WoIrnT7lZufMVajFPiU0rBQbxpi-Y&callback=initMap"
+    async defer></script>
+  </body>
+</html>

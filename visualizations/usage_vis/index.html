@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Subway and CitiBike Usage</title>
+    <link rel="stylesheet" type="text/css" href="./usage.css" />
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script type="text/javascript" src="./js/jquery-3.1.1.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text" rel="stylesheet" type='text/css'>
+  </head>
+<body>
+<div id="main-wrapper">
+    <div id="content">
+        <h1>NYC Transit Usage</h1>
+        <p>Let's see the relationship between subway and CitiBike usage</p>
+    
+        <div id="filters">
+            <a id="S">Subway Stations</a>
+            <a id="C">CitiBike Stations</a>
+        </div><!-- @end #filters -->
+
+        <div id="blurb">
+            <div id="default-blurb">
+                <h2>New York City</h2>
+                <p>The average daily usages of subway and CitiBike stations in New York City from December-28-2014 to May-31-2015 were 1514 and 50 entries, respectively.</p>
+            </div>
+            <div id="blurb-content"></div>
+        </div>
+
+        <div id="vis"></div>
+        <div id="cite">by Anurag Prasad and Jarrod Lewis</div> 
+
+    </div><!-- @end content -->
+</div><!-- @end #main-wrapper -->
+
+<script type="text/javascript" src="./usage.js"></script>
+
+</body>
+</html>
